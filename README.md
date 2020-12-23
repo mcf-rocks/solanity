@@ -20,7 +20,7 @@ Using a single Tesla V100 searching for AAAA only, you should find a match under
 
 There is almost zero penalty for searching multiple prefix patterns, so you should.
 
-nb: I changed the logging of 'attempts', the original author thought it should be multiplies by 64, but I have no idea why, so I removed that.
+nb: I changed the logging of 'attempts', the original author thought it should be multiplied by 64, but I have no idea why, so I removed that.
 
 NO WARRANTY OR LIABILITY WHATSOEVER, IN THIS WORLD OR THE WORLD TO COME, YOUR SOUL IS YOUR OWN RESPONSIBILITY.
 
