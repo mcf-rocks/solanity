@@ -1,0 +1,14 @@
+[package]
+name = "jerasure-sys"
+description = "Rust bindings for jerasure 2.0"
+version = "0.1.0"
+homepage = "https://solana.com/"
+readme = "../jerasure/README"
+repository = "https://github.com/solana-labs/solana-perf-libs"
+authors = ["Solana Maintainers <maintainers@solana.com>"]
+license = "../jerasure/COPYING"
+links = "Jerasure"
+build = "build.rs"
+
+[build-dependencies]
+cc = "1.0"

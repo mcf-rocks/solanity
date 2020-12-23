@@ -1,0 +1,83 @@
+/*
+ * This file contains Solana's SGX enclave interface.
+ */
+
+enclave {
+    from "sgx_tkey_exchange.edl" import *;
+    include "sgx_key_exchange.h"
+    include "sgx_trts.h"
+    include "signing_internal.h"
+
+   trusted {
+      /* This function initializes enclave's remote attestation
+         parameters.
+
+         Parameters:
+         b_pse:   Use Intel's Platform Services
+         pub_key: The caller's public key, that it'll use for
+                  communication with Intel's IAS service.
+         pctxt:   Remmote attestation context
+      */
+      public sgx_status_t init_remote_attestation(
+         int b_pse,
+         [in] sgx_ec256_public_t* pub_key,
+         [out] sgx_ra_context_t *pctxt);
+
+      /* This function frees enclave's remote attestation
+         context (returned by init_remote_attestation).
+      */
+      public sgx_status_t close_remote_attestation(sgx_ra_context_t ctxt);
+
+      /* This function initializes an ED25519 keypair in enclave. It
+         returns the public key to the caller. The private key will
+         be used by sign_sgx_ed25519 function to sign the data.
+
+         Enclave uses lockout parameters to compute if signing the
+         data will cause slashing.
+      */
+      public sgx_status_t init_sgx_ed25519(
+         uint32_t lockout_period,
+         uint32_t lockout_multiplier,
+         uint32_t lockout_max_depth,
+         uint32_t key_len,
+         [out, size=key_len] uint8_t* pubkey);
+
+      /* This function returns sealed enclave data (keypair, lockout
+         parameters) to the caller. The data is encrypted using
+         enclave specific keys.
+      */
+      public sgx_status_t get_sgx_ed25519_data(
+         uint32_t data_size,
+         [out, size=data_size] uint8_t* sealed_data,
+         [out] uint32_t* data_size_needed);
+
+      /* This function initializes enclave using sealed data. The data
+         was sealed using get_sgx_ed25519_data() function.
+
+         The caller can also update the lockout parameters.
+      */
+      public sgx_status_t init_sgx_ed25519_from_data(
+         uint32_t data_size,
+         [in, size=data_size] uint8_t* sealed_data,
+         uint32_t update_lockout_params,
+         uint32_t lockout_period,
+         uint32_t lockout_multiplier,
+         uint32_t lockout_max_depth,
+         uint32_t key_len,
+         [out, size=key_len] uint8_t* pubkey);
+
+      /* This function signs the message by using private key generated
+         during init function. The caller provides the new history entries.
+         The enclave checks the lockout parameters, past history and the
+         new history to compute slashing conditions. The enclave will not
+         sign the message if it'll result in slashing.
+      */
+      public sgx_status_t sign_sgx_ed25519(
+         uint32_t msg_len,
+         [in, size=msg_len] const uint8_t* msg,
+         uint32_t history_len,
+         [in, count=history_len] const history_entry_t* entries,
+         uint32_t sig_len,
+         [out, size=sig_len] uint8_t* signature);
+   };
+};
