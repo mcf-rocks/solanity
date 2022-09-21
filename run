@@ -1,1 +1,3 @@
-LD_LIBRARY_PATH=./src/release ./src/release/cuda_ed25519_vanity
+#!/bin/bash
+
+LD_LIBRARY_PATH=./src/release ./src/release/cuda_ed25519_vanity;
