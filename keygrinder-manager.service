@@ -1,0 +1,30 @@
+[Unit]
+Description=Smart Keygrinder Manager - Auto-starts keygrinder when cache is low
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/solanity-pub-sub
+ExecStart=/home/ubuntu/solanity-pub-sub/smart-keygrinder-manager.sh start
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Environment variables
+Environment="REDIS_HOST=your-redis-host"
+Environment="REDIS_PORT=6379"
+Environment="CACHE_THRESHOLD=80"
+Environment="CACHE_MIN=50"
+Environment="CHECK_INTERVAL=30"
+Environment="LOG_FILE=/var/log/keygrinder-manager.log"
+
+# Resource limits (optional)
+# MemoryLimit=2G
+# CPUQuota=200%
+
+[Install]
+WantedBy=multi-user.target
+

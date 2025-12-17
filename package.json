@@ -1,0 +1,22 @@
+{
+  "name": "solanity-pub-sub-bridge",
+  "version": "1.0.0",
+  "description": "Bridge service to connect keygrinder to Redis pub/sub",
+  "main": "keygrinder-bridge.ts",
+  "scripts": {
+    "bridge": "ts-node keygrinder-bridge.ts",
+    "bridge:cpu": "KEYGRINDER_CMD=ts-node cpu-keygrinder.ts npm run bridge",
+    "keygrinder:cpu": "ts-node cpu-keygrinder.ts",
+    "build": "tsc keygrinder-bridge.ts --outDir dist --esModuleInterop --resolveJsonModule --module commonjs --target ES2020"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.87.6",
+    "redis": "^4.6.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
+

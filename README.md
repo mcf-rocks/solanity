@@ -46,6 +46,21 @@ $ make -j$(nproc)
 
 ## Running
 
+### CUDA Version (GPU accelerated)
 ```bash
 LD_LIBRARY_PATH=./src/release ./src/release/cuda_ed25519_vanity
 ```
+
+### CPU Fallback (for testing on macOS/without GPU)
+```bash
+# Install dependencies first
+npm install
+
+# Run CPU version directly
+npm run keygrinder:cpu
+
+# Or use with bridge (automatically falls back to CPU if CUDA not available)
+npm run bridge
+```
+
+The CPU version outputs keys in the same format as the CUDA version, so it works seamlessly with the bridge service. Note: CPU version is much slower (~1000x) but useful for testing.

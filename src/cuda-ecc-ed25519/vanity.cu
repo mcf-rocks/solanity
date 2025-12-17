@@ -35,7 +35,7 @@ typedef struct {
 void            vanity_setup(config& vanity);
 void            vanity_run(config& vanity);
 void __global__ vanity_init(unsigned long long int* seed, curandState* state);
-void __global__ vanity_scan(curandState* state, int* keys_found, int* gpu, int* execution_count);
+void __global__ vanity_scan(curandState* state, int* keys_found, int* gpu, int* exec_count);
 bool __device__ b58enc(char* b58, size_t* b58sz, uint8_t* data, size_t binsz);
 
 /* -- Entry Point ----------------------------------------------------------- */
@@ -229,6 +229,9 @@ void __global__ vanity_init(unsigned long long int* rseed, curandState* state) {
 
 void __global__ vanity_scan(curandState* state, int* keys_found, int* gpu, int* exec_count) {
 	int id = threadIdx.x + (blockIdx.x * blockDim.x);
+	
+	// Store pointer to state array to avoid potential scope issues
+	curandState* state_array = state;
 
         atomicAdd(exec_count, 1);
 
@@ -246,7 +249,7 @@ void __global__ vanity_scan(curandState* state, int* keys_found, int* gpu, int* 
 
 	// Local Kernel State
 	ge_p3 A;
-	curandState localState     = state[id];
+	curandState localState     = state_array[id];
 	unsigned char seed[32]     = {0};
 	unsigned char publick[32]  = {0};
 	unsigned char privatek[64] = {0};
@@ -399,16 +402,29 @@ void __global__ vanity_scan(curandState* state, int* keys_found, int* gpu, int* 
 		// this.
 
                 for (int i = 0; i < sizeof(prefixes) / sizeof(prefixes[0]); ++i) {
+                        int pattern_len = prefix_letter_counts[i];
+                        bool matched = true;
+                        
+                        // Check if pattern matches at the END of the address (suffix)
+                        // Solana addresses are base58, typically 32-44 characters
+                        int key_len = 0;
+                        while (key[key_len] != '\0' && key_len < 256) key_len++;
+                        
+                        if (key_len >= pattern_len) {
+                                // Check suffix (end of address)
+                                for (int j = 0; j < pattern_len; ++j) {
+                                        int key_pos = key_len - pattern_len + j;
+                                        if ( !(prefixes[i][j] == '?') && !(prefixes[i][j] == key[key_pos]) ) {
+                                                matched = false;
+                                                break;
+                                        }
+                                }
+                        } else {
+                                matched = false;
+                        }
 
-                        for (int j = 0; j<prefix_letter_counts[i]; ++j) {
-
-				// it doesn't match this prefix, no need to continue
-				if ( !(prefixes[i][j] == '?') && !(prefixes[i][j] == key[j]) ) {
-					break;
-				}
-
-                                // we got to the end of the prefix pattern, it matched!
-                                if ( j == ( prefix_letter_counts[i] - 1) ) {
+                                // Pattern matched at the end!
+                                if (matched) {
                                         atomicAdd(keys_found, 1);
                                         //size_t pkeysize = 256;
                                         //b58enc(pkey, &pkeysize, seed, 32);
@@ -454,9 +470,7 @@ void __global__ vanity_scan(curandState* state, int* keys_found, int* gpu, int* 
 
                                         break;
 				}
-
                         }
-		}
 
 		// Code Until here runs at 22_000_000H/s. So the above is fast enough.
 
@@ -478,7 +492,7 @@ void __global__ vanity_scan(curandState* state, int* keys_found, int* gpu, int* 
 
 	// Copy Random State so that future calls of this kernel/thread/block
 	// don't repeat their sequences.
-	state[id] = localState;
+	state_array[id] = localState;
 }
 
 bool __device__ b58enc(
